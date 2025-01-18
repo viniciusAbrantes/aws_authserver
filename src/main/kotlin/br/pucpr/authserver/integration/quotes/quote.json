@@ -1,0 +1,19 @@
+{
+  "statusCode": 200,
+  "message": "Random quotes",
+  "pagination": {
+    "currentPage": 1,
+    "nextPage": null,
+    "totalPages": 1
+  },
+  "totalQuotes": 1,
+  "data": [
+    {
+      "_id": "5eb17ab1b69dc744b4e7e1be",
+      "quoteText": "If you don't mark your successes, the day your ship comes in could be just another day at the office, and there's no poetry in that.",
+      "quoteAuthor": "Glen Hansard",
+      "quoteGenre": "poetry",
+      "__v": 0
+    }
+  ]
+}
