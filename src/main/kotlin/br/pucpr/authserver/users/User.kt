@@ -19,6 +19,8 @@ class User(
     @NotNull
     var quote: String = "",
     @NotNull
+    var phone: String = "",
+    @NotNull
     var avatar: String = AvatarService.DEFAULT_AVATAR,
 
     @ManyToMany

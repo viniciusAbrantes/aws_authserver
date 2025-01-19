@@ -2,6 +2,7 @@ package br.pucpr.authserver.users
 
 import br.pucpr.authserver.errors.NotFoundException
 import br.pucpr.authserver.integration.quotes.QuoteClient
+import br.pucpr.authserver.integration.sms.SmsClient
 import br.pucpr.authserver.roles.RoleRepository
 import br.pucpr.authserver.security.Jwt
 import br.pucpr.authserver.users.responses.LoginResponse
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
+import kotlin.random.Random
 
 @Service
 class UserService(
@@ -19,17 +21,22 @@ class UserService(
     val roleRepository: RoleRepository,
     val avatarService: AvatarService,
     val quoteClient: QuoteClient,
+    val smsClient: SmsClient,
     val jwt: Jwt
 ) {
     fun save(user: User): UserResponse {
         if (user.quote.isBlank()) {
             quoteClient.randomQuote()?.let {
                 user.quote = "\"${it.text}\" (${it.author})"
-                log.warn("viniabr quote=${user.quote}")
             }
         }
 
-        log.info("User saved: $user")
+        if (user.phone.length == 14) {
+            val code = Random.nextInt(1000, 9999)
+            smsClient.sendSms(user, "AuthServerApp: verification code: $code", true)
+        }
+
+        log.info("Saving user: $user")
         return userRepository.save(user).toResponse()
     }
 

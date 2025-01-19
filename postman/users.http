@@ -17,7 +17,8 @@ Content-Type: application/json
 {
   "email": "vinicius_abrantes@live.com",
   "password": "password123",
-  "name": "Vinicius Abrantes"
+  "name": "Vinicius Abrantes",
+  "phone": "+5519996488106"
 }
 
 ### Login
