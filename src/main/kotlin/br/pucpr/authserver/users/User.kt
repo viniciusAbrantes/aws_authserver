@@ -21,6 +21,8 @@ class User(
     @NotNull
     var phone: String = "",
     @NotNull
+    var uuid: String = "",
+    @NotNull
     var avatar: String = AvatarService.DEFAULT_AVATAR,
 
     @ManyToMany

@@ -1,15 +1,3 @@
-POST http://localhost:8080/api/users
-Content-Type: application/json
-
-{
-  "name": "John Doe",
-  "email": "johndoe@user.com",
-  "password": "password"
-}
-
-### Get the first user
-GET localhost:8080/api/users
-
 ### Add user
 POST localhost:8080/api/users
 Content-Type: application/json
@@ -21,12 +9,42 @@ Content-Type: application/json
   "phone": "+5519996488106"
 }
 
+### Get users
+GET localhost:8080/api/users
+
 ### Login
 POST localhost:8080/api/users/login
 Content-Type: application/json
 
 {
-  "email": "admin@authserver.com.br",
-  "password": "administrator"
+  "phone": "+5519996488106",
+  "uuid": "9f2d30b9-f0c2-49b6-ab4a-90afe5dc1b6f"
 }
 
+### List users again (uuid still not updated)
+GET localhost:8080/api/users
+
+### Confirm
+POST localhost:8080/api/users/login/confirm
+Content-Type: application/json
+
+{
+  "phone": "+5519996488106",
+  "uuid": "9f2d30b9-f0c2-49b6-ab4a-90afe5dc1b6f",
+  "code": 6848
+}
+
+
+### List users again (uuid must be updated)
+GET localhost:8080/api/users
+
+
+
+### Login again (this time it should accept and return the token)
+POST localhost:8080/api/users/login
+Content-Type: application/json
+
+{
+  "phone": "+5519996488106",
+  "uuid": "9f2d30b9-f0c2-49b6-ab4a-90afe5dc1b6f"
+}

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository
 @Repository
 interface UserRepository: JpaRepository<User, Long> {
     fun findByEmail(email: String): List<User>
+    fun findByPhone(phone: String): List<User>
 
     @Query(
         "select distinct u from User u" +

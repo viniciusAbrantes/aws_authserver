@@ -1,10 +1,13 @@
 package br.pucpr.authserver.users
 
+import br.pucpr.authserver.users.requests.ConfirmationRequest
 import br.pucpr.authserver.users.requests.LoginRequest
 import br.pucpr.authserver.users.requests.UserRequest
 import br.pucpr.authserver.users.responses.UserResponse
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import jakarta.validation.Valid
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -56,9 +59,17 @@ class UserController(
 
     @PostMapping("/login")
     fun login(@Valid @RequestBody login: LoginRequest) =
-        userService.login(login.email!!, login.password!!)
+        userService.login(login.phone!!, login.uuid!!)
             ?.let { ResponseEntity.ok(it) }
-            ?: ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
+            ?: ResponseEntity.status(HttpStatus.ACCEPTED).build()
+
+    @PostMapping("/login/confirm")
+    fun confirm(@Valid @RequestBody confirmation: ConfirmationRequest) =
+        if (userService.validateCode(confirmation.phone!!, confirmation.uuid!!, confirmation.code)) {
+            ResponseEntity.status(HttpStatus.OK).build<Void>()
+        } else {
+            ResponseEntity.status(HttpStatus.NOT_FOUND).build()
+        }
 
     @SecurityRequirement(name = "WebToken")
     @PreAuthorize("permitAll()")
@@ -67,4 +78,8 @@ class UserController(
         userService.saveAvatar(id, avatar).let {
             ResponseEntity.created(URI(it)).build<Void>()
         }
+
+    companion object {
+        private val log: Logger = LoggerFactory.getLogger(UserController::class.java)
+    }
 }

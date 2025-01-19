@@ -27,13 +27,10 @@ class UserService(
     fun save(user: User): UserResponse {
         if (user.quote.isBlank()) {
             quoteClient.randomQuote()?.let {
-                user.quote = "\"${it.text}\" (${it.author})"
+                "\"${it.text}\" (${it.author})".let { quote ->
+                    user.quote = quote.substring(0, Math.min(quote.length, 250))
+                }
             }
-        }
-
-        if (user.phone.length == 14) {
-            val code = Random.nextInt(1000, 9999)
-            smsClient.sendSms(user, "AuthServerApp: verification code: $code", true)
         }
 
         log.info("Saving user: $user")
@@ -66,21 +63,48 @@ class UserService(
         return true
     }
 
-    fun login(email: String, password: String): LoginResponse? {
-        val user = userRepository.findByEmail(email).firstOrNull()
+    fun login(phone: String, uuid: String): LoginResponse? {
+        val user = userRepository.findByPhone(phone).firstOrNull()
 
-        if (user == null) {
-            log.warn("User {} not found!", email)
-            return null
+        return if (user == null) {
+            log.warn("User {} not found!", phone)
+            null
+        } else if (uuid == user.uuid) {
+            log.info("User logged in: id={}, name={}", user.id, user.name)
+            LoginResponse(
+                token = jwt.createToken(user), user.toResponse()
+            )
+        } else {
+            log.info("user phone found but with different uuid, sending verification code. " +
+                    "Received: $uuid, expected: ${user.uuid}")
+
+            val code = Random.nextLong(1000, 9999)
+            pendingVerificationMap[phone] = ConfirmationData(uuid, code)
+            smsClient.sendSms(user, "AuthServerApp: verification code: $code", true)
+            null
         }
-        if (password != user.password) {
-            log.warn("Invalid password!")
-            return null
+    }
+
+    fun validateCode(phone: String, uuid: String, code: Long): Boolean {
+        val user = userRepository.findByPhone(phone).firstOrNull()
+
+        return if (user == null) {
+            log.warn("User not found for $phone")
+            return false
+        } else {
+            pendingVerificationMap[phone].let {
+                if (it?.uuid == uuid && it.code == code) {
+                    log.info("confirmation found for $phone")
+                    pendingVerificationMap.remove(phone)
+                    user.uuid = uuid
+                    userRepository.save(user)
+                    true
+                } else {
+                    log.error("wrong confirmation data for $phone")
+                    false
+                }
+            }
         }
-        log.info("User logged in: id={}, name={}", user.id, user.name)
-        return LoginResponse(
-            token = jwt.createToken(user), user.toResponse()
-        )
     }
 
     fun saveAvatar(id: Long, avatar: MultipartFile): String {
@@ -94,5 +118,8 @@ class UserService(
 
     companion object {
         private val log: Logger = LoggerFactory.getLogger(UserService::class.java)
+        private val pendingVerificationMap = mutableMapOf<String, ConfirmationData>()
     }
+
+    private data class ConfirmationData(val uuid: String, val code: Long)
 }
